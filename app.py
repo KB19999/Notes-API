@@ -14,7 +14,7 @@ CORS(app)
 db.init_app(app)
 jwt = JWTManager(app)
 
-app.register_blueprint(auth_bp, url_prefix='/api')
+app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
 app.register_blueprint(notes_bp, url_prefix='/api/notes')
 
 
