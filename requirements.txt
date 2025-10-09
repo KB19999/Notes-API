@@ -5,3 +5,5 @@ Flask-SQLAlchemy
 marshmallow
 Werkzeug
 gunicorn
+SQLAlchemy            # Added explicitly for db.func and ORM dependencies
+python-dotenv         # For environment variable support (.env file on local or Render)
