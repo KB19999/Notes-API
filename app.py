@@ -6,51 +6,75 @@ from models import db
 from auth import auth_bp
 from notes import notes_bp
 
-
+# Initialize Flask app
 app = Flask(__name__)
+
+# Load configuration (secret keys, DB URI, etc.)
 app.config.from_object(Config)
 
+# Enable Cross-Origin Resource Sharing (CORS)
 CORS(app)
+
+# Initialize SQLAlchemy database
 db.init_app(app)
+
+# Initialize JWT Manager
 jwt = JWTManager(app)
 
+# Ensure all database tables exist before serving requests
+with app.app_context():
+    db.create_all()
+
+# Register Blueprints (modular endpoints)
+# Keeping URL prefixes consistent and descriptive
 app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
-app.register_blueprint(notes_bp, url_prefix='/api/notes')
+app.register_blueprint(notes_bp, url_prefix='/api/v1/notes')  # aligned with versioning scheme
 
-
+# Welcome route
 @app.route('/')
 def index():
-    return jsonify({'message': 'Welcome to the Notes API',
-                    'version': '1.0',
-                    'endpoints': {
-                        'auth': {
-                            'register': 'POST/api/register',
-                            'login': 'POST/api/login'
-                        },
-                        'notes': {
-                            'get_all': 'GET/api/notes',
-                            'create': 'POST/api/notes',
-                            'get': 'GET/api/notes/<id>',
-                            'update': 'PUT/api/notes/<id>',
-                                'delete': 'DELETE/api/notes/<id>',
-                                'archive': 'PATCH/api/notes/<id>/archive',
-                                'unarchive': 'PATCH/api/notes/<id>/unarchive'
-                            },
-                            'filters': {
-                                'by_date': 'GET/api/notes?date=YYYY-MM-DD',
-                                'by_keyword': 'GET/api/notes?keyword=your_keyword',
-                                'by_archived': 'GET/api/notes?archived=true|false'
-                            }
-                        }
-                    })
+    return jsonify({
+        'message': 'Welcome to the Notes API',
+        'version': '1.0',
+        'status': 'running',
+        'endpoints': {
+            'auth': {
+                'register': 'POST /api/v1/auth/register',
+                'login': 'POST /api/v1/auth/login'
+            },
+            'notes': {
+                'get_all': 'GET /api/v1/notes',
+                'create': 'POST /api/v1/notes',
+                'get': 'GET /api/v1/notes/<id>',
+                'update': 'PUT /api/v1/notes/<id>',
+                'delete': 'DELETE /api/v1/notes/<id>',
+                'archive': 'PATCH /api/v1/notes/<id>/archive',
+                'unarchive': 'PATCH /api/v1/notes/<id>/unarchive'
+            },
+            'filters': {
+                'by_date': 'GET /api/v1/notes?date=YYYY-MM-DD',
+                'by_keyword': 'GET /api/v1/notes?keyword=your_keyword',
+                'by_archived': 'GET /api/v1/notes?archived=true|false'
+            }
+        }
+    }), 200
+
+
+# Custom error handlers
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Not found'}), 404
+
+
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
+
+# Entry point
+# Using port 10000 for Render
+# Setting debug=False for deployment.
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    import os
+    port = int(os.getenv('PORT', 10000))
+    app.run(host='0.0.0.0', port=port, debug=False)
