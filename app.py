@@ -74,6 +74,10 @@ def internal_error(error):
 # Entry point
 # Using port 10000 for Render
 # Setting debug=False for deployment.
+
+for rule in app.url_map.iter_rules():
+    print(rule)
+
 if __name__ == '__main__':
     import os
     port = int(os.getenv('PORT', 10000))
