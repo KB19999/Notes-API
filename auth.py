@@ -47,7 +47,7 @@ def register():
         db.session.commit()
 
         # Generate JWT token for the new user
-        access_token = create_access_token(identity=new_user.id)
+        access_token = create_access_token (identity=str(new_user.id))
 
         return jsonify({
             'message': 'User registered successfully',
@@ -92,7 +92,7 @@ def login():
         return jsonify({'error': 'Invalid username or password'}), 401
 
     # Generate JWT token on success
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token (identity=str(user.id))
     return jsonify({
         'message': 'Login successful',
         'access_token': access_token
@@ -109,7 +109,7 @@ def protected():
     A protected route to test token authentication.
     Only accessible with a valid JWT.
     """
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     user = User.query.get(current_user_id)
 
     if not user:
