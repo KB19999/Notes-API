@@ -5,6 +5,7 @@ from config import Config
 from models import db
 from auth import auth_bp
 from notes import notes_bp
+from admin import admin_bp
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -28,7 +29,8 @@ with app.app_context():
 # Register Blueprints (modular endpoints)
 # Keeping URL prefixes consistent and descriptive
 app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
-app.register_blueprint(notes_bp, url_prefix='/api/v1/notes')  # aligned with versioning scheme
+app.register_blueprint(notes_bp, url_prefix='/api/v1/notes') 
+app.register_blueprint(admin_bp, url_prefix='/api/v1/admin')
 
 # Welcome route
 @app.route('/')

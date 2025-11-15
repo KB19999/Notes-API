@@ -14,6 +14,9 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Automatically timestamps user creation
 
+    #indicates if the user has admin privileges
+    is_admin = db.Column(db.Boolean, default=False)
+    
     # Establish one-to-many relationship with Note table
     notes = db.relationship(
         'Note',
