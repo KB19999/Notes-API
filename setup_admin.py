@@ -2,6 +2,21 @@ from app import app
 from models import db, User
 from werkzeug.security import generate_password_hash
 
+# SAFETY CHECKS — DO NOT REMOVE
+
+# Guard 1: Require explicit environment confirmation
+if os.getenv("ALLOW_ADMIN_RESET") != "true":
+    print("REFUSING TO RUN: ALLOW_ADMIN_RESET is not set to 'true'.")
+    print("This script is disabled to protect production data.")
+    exit(1)
+
+# Guard 2: Prevent running on PostgreSQL (used in Render production)
+db_url = os.getenv("DATABASE_URL", "")
+if db_url.startswith("postgres://") or db_url.startswith("postgresql://"):
+    print("REFUSING TO RUN: Detected PostgreSQL (production) database.")
+    print("This script can only run on local SQLite in development.")
+    exit(1)
+    
 # Configuration for first admin user
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "Admin@1JudeAndKwaku"  
