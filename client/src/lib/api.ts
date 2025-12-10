@@ -1,11 +1,20 @@
 import axios from 'axios';
 
-const baseURL =
-  import.meta.env.VITE_API_URL
-    ? `${import.meta.env.VITE_API_URL}/api/v1`
-    : 'http://localhost:10000/api/v1';
+// Compute API URL at runtime to avoid Netlify hydration issues
+function getBaseURL() {
+  const url = import.meta.env.VITE_API_URL;
+  if (url) return `${url}/api/v1`;
+  return "http://localhost:10000/api/v1";
+}
 
-const api = axios.create({ baseURL });
+// Debug log to help diagnose missing environment variable issues
+if (!import.meta.env.VITE_API_URL) {
+  console.warn("VITE_API_URL is not defined — falling back to localhost API.");
+}
+
+const api = axios.create({
+  baseURL: getBaseURL()
+});
 
 api.interceptors.request.use((config) => {
 	const token = localStorage.getItem('access_token');
