@@ -14,7 +14,13 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Enable Cross-Origin Resource Sharing (CORS)
-CORS(app)
+allowed_origins = [
+    "https://journalq.netlify.app"
+]
+
+CORS(app, resources={
+    r"/api/*": {"origins": allowed_origins}
+})
 
 # Initialize SQLAlchemy database
 db.init_app(app)
