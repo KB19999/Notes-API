@@ -1,11 +1,11 @@
 Deployment Guide — Notes API & Client Web App
 
-This guide documents how to deploy the Flask backend to Render and the Vite React frontend to Netlify, including environment variables, build settings, routing configuration, and troubleshooting.
+This guide outlines the steps required to deploy the Flask backend on Render and the Vite/React frontend on Netlify. It covers build settings, environment variables, routing configuration, and verification steps.
 
 1. Backend Deployment (Render)
 1.1 Project Structure
-The backend lives at the root of the repository:
 
+The backend codebase is located at the root of the repository:
 Notes-API/
   app.py
   models.py
@@ -16,99 +16,99 @@ Notes-API/
   requirements.txt
   ...
 
-1.2 Render Setup
-
-Visit: https://dashboard.render.com
-Click New → Web Service
-Connect this GitHub repo
-
-Configure as follows:
+1.2 Render Web Service Setup
+Navigate to: https://dashboard.render.com
+Select New → Web Service
+Connect the GitHub repository
+Configure the service as follows:
 Setting	Value
 Runtime	Python
 Build Command	pip install -r requirements.txt
 Start Command	gunicorn app:app
 Environment	Production
-Port	Auto-detected (Flask reads $PORT)
+Port	Auto-detected ($PORT)
+
+Render automatically assigns the runtime port.
+
 1.3 Required Environment Variables
 
-Add the following in Render → Environment:
+Add the following under Render → Environment:
 SESSION_SECRET = your_generated_secret
 JWT_SECRET_KEY = your_jwt_secret
 DATABASE_URL = your_postgres_database_url
+FRONTEND_URL = https://journalq.netlify.app
 
+These values allow the backend to authenticate users, connect to PostgreSQL, and communicate with the deployed frontend.
 
-Render will automatically provide the PORT environment variable.
+1.4 CORS Configuration
+The backend must allow only the deployed frontend to access protected API routes.
 
-1.4 CORS
+Ensure your app.py includes:
+allowed_origins = ["https://journalq.netlify.app"]
 
-The application uses:
-CORS(app)
-This allows requests from your Netlify frontend.
-For production hardening, consider locking this down (see security audit).
+CORS(app, resources={
+    r"/api/*": {"origins": allowed_origins}
+})
 
+This is required for Render → Netlify communication.
 
 2. Frontend Deployment (Netlify)
-The frontend codebase is located in:
-client/
+The frontend resides in the client/ directory.
 
-2.1 Build Settings
-Configure Netlify → Site Settings → Build & Deploy:
+2.1 Netlify Build Settings
+Go to Netlify → Site Settings → Build & Deploy and configure:
 Setting	Value
 Base Directory	client
 Build Command	npm run build
 Publish Directory	dist
 
-This ensures Netlify builds the React/Vite app correctly.
+Netlify will automatically detect Node and install dependencies.
 
-2.2 Environment Variable
-Add in Netlify:
+2.2 Required Environment Variable
+Add this in Netlify → Site Configuration → Environment Variables:
 VITE_API_URL = https://your-render-backend.onrender.com
-MUST NOT end with a trailing slash.
+Notes:
+Do not include a trailing slash.
+The frontend automatically appends /api/v1 when making requests.
 
-Your frontend axios instance will automatically append /api/v1 to this base URL.
-
-2.3 Required Redirect Rule (React Router Fix)
-React Router requires Netlify to serve index.html on all paths.
-Create:
+2.3 Required Redirect File (React Router)
+To support client-side routing:
+Create a file at:
 client/public/_redirects
-With the following content:
+Add this line:
 /*   /index.html   200
 
-
-This prevents 404 errors when visiting /login, /notes, etc.
+This ensures paths like /login and /notes load correctly.
 
 3. Common Deployment Errors & Fixes
 Error: client/dist does not exist
-Cause: Netlify did not run npm run build.
+Cause: Netlify did not run the build.
 
 Fix:
 Base Directory must be client
 Publish Directory must be dist
-Build command must be set
+Build Command must be set to npm run build
 
-Error: React routes (e.g., /login) show 404
+Error: React routes show 404 on refresh
+Fix: Confirm _redirects is correctly placed in client/public/.
 
-Fix:
-_redirects file missing or incorrect.
-Error: Login/Register fails in production
-
-Fix:
-Ensure VITE_API_URL is correct
+Error: Login or Register fails in production
+Fixes:
+Confirm VITE_API_URL is correctly set
 Ensure no trailing slash
-Verify axios baseURL includes /api/v1
+Verify backend is reachable at .../api/v1/...
 
 4. Deployment Verification Checklist
 Backend (Render)
-Register user returns 201
-Login returns JWT
-CRUD notes operations work
-Admin endpoints respond for admin accounts
+Registration returns a 201 status
+Login returns a valid JWT
+Notes CRUD operations work
+Archive/unarchive works
+Admin routes respond for admin accounts
 
 Frontend (Netlify)
-Register works
-Login redirects correctly
-Notes page loads data
-Create/Edit/Delete note works
-Archive/Unarchive works
-Logout works
-Refreshing /notes or /login does not show a 404
+Registration works
+Login redirects to /notes
+Notes list loads and filters correctly
+Create/Edit/Delete functions operate as expected Logout clears token and redirects
+Refreshing any route does not 404
